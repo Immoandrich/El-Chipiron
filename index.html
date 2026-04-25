@@ -606,15 +606,15 @@
 ════════════════════════════════════════ */
 
 
-const APP_VERSION = 'elchipiron_v6';
+const APP_VERSION = 'elchipiron_v9';
 const LAST_VERSION_KEY = 'elchipiron_version';
 if (localStorage.getItem(LAST_VERSION_KEY) !== APP_VERSION) {
   // Clear only old storage keys from previous versions
-  ['lifeos_v1','lifeos_v2','elchipiron_v1','elchipiron_v2','elchipiron_v3','elchipiron_v4','elchipiron_v5'].forEach(k => localStorage.removeItem(k));
+  ['lifeos_v1','lifeos_v2','elchipiron_v1','elchipiron_v2','elchipiron_v3','elchipiron_v4','elchipiron_v5','elchipiron_v6','elchipiron_v7','elchipiron_v8'].forEach(k => localStorage.removeItem(k));
   localStorage.setItem(LAST_VERSION_KEY, APP_VERSION);
 }
 
-const SK = 'elchipiron_v6';
+const SK = 'elchipiron_v9';
 
 const DEFAULT = {
   gedanken: [],
@@ -751,20 +751,25 @@ function getDailyQuote() {
 /* ═══ HOME ═══ */
 function renderHome() {
   const el = document.getElementById('v-home');
-  const allZ  = allZiele();
-  const doneZ = allZ.filter(z => z.done).length;
-  const day   = new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+  const allH = [...(D.gewohnheiten.gut||[]),...(D.gewohnheiten.schlecht||[])];
+  const doneH = allH.filter(g => (g.days||[]).length > 0).length;
+  const day = new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+  const quote = getDailyQuote();
 
   el.innerHTML = `
     <div class="home-logo">${logoSVG()}</div>
+    <div style="font-size:11px;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;margin-bottom:16px">${day}</div>
 
-    <div style="font-size:11px;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;margin-bottom:20px">${day}</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 18px 16px;margin-bottom:20px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:0;left:0;width:3px;height:100%;background:var(--red)"></div>
+      <div style="font-size:15px;font-weight:500;line-height:1.5;color:var(--text);padding-left:4px">"${quote}"</div>
+    </div>
 
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-label">Ziele</div>
-        <div class="stat-val">${doneZ}<span style="font-size:15px;color:var(--text3);font-weight:400">/${allZ.length}</span></div>
-        <div class="stat-sub">erledigt</div>
+        <div class="stat-label">Gewohnheiten</div>
+        <div class="stat-val">${doneH}<span style="font-size:15px;color:var(--text3);font-weight:400">/${allH.length}</span></div>
+        <div class="stat-sub">aktiv diese Woche</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Gedanken</div>
@@ -773,28 +778,13 @@ function renderHome() {
       </div>
     </div>
 
-    <div class="sh"><span class="sh-title">Letzte Gedanken</span>
-      <button class="text-btn" onclick="showView('gedanken')">alle →</button>
-    </div>
-    ${D.gedanken.length
-      ? D.gedanken.slice(-3).reverse().map(g => `
-          <div class="card">
-            <div class="card-title">${esc(g.text)}</div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
-              <span class="tag">${esc(g.kat)}</span>
-              <span style="font-size:11px;color:var(--text3)">${fmtDate(g.ts)}</span>
-            </div>
-          </div>`).join('')
-      : '<div class="empty">Noch keine Gedanken — tippe los</div>'
-    }
-
     <div class="sh" style="margin-top:22px"><span class="sh-title">Schnellzugriff</span></div>
     <div class="home-quick">
       ${[
         ['Ziele','ziele',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,'Privat, Sport, Business'],
         ['Gewohnheiten','gewohn',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,'Streaks aufbauen'],
         ['Wissensdatenbank','wissen',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>`,'10 Kategorien'],
-        ['Belastungen','belast',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>`,'Stresslevel tracken'],
+        ['Sport','ziele',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,'Ziele & Tracking'],
         ['Beziehung','bezieh',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,'Unternehmungen & Visionen'],
         ['Gedanken','gedanken',`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,'Schnell notieren'],
       ].map(([name,v,svg,sub]) => `
@@ -803,8 +793,7 @@ function renderHome() {
           <div class="quick-card-name">${name}</div>
           <div class="quick-card-sub">${sub}</div>
         </button>`).join('')}
-    </div>`;
-}
+    </div>`;}
 
 /* ═══ GEDANKEN ═══ */
 function renderGedanken() {
